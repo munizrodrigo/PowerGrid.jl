@@ -4,6 +4,7 @@ using PythonCall
 
 import PowerModels
 import PowerModelsDistribution
+import OrderedCollections: OrderedSet
 
 export Grid
 
