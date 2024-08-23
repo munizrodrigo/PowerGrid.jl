@@ -1,0 +1,5 @@
+[deps]
+networkx = ""
+
+[pip.deps]
+walkerlayout = ""

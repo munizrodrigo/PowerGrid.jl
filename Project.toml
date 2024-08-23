@@ -3,6 +3,10 @@ uuid = "41ccd83a-347b-449b-936f-192b657ea7d1"
 authors = ["João Rodrigo da Silva Muniz"]
 version = "1.0.0-DEV"
 
+[deps]
+CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
+PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
+
 [compat]
 julia = "1.6.7"
 
