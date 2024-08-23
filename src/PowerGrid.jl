@@ -8,6 +8,8 @@ import OrderedCollections: OrderedSet
 
 export Grid
 
+include("exceptions.jl")
+
 const nx = Ref{Py}()
 const walkerlayout = Ref{Py}()
 
@@ -24,10 +26,8 @@ mutable struct Grid
     buses::OrderedSet{Int64}
     branches::OrderedSet{Tuple{Int64,Int64}}
     get_substation::Function
-    export_to_json::Function
     export_to_opendss::Function
     save_powermodels::Function
-    export_powerplot::Function
     plot_graph::Function
     Grid(source::String) = _grid(new(), source)
     Grid(source::String, settings::Dict{Symbol, Any}; kwargs...) = _grid(new(), source, settings; kwargs...)
@@ -35,6 +35,7 @@ end
 
 function _grid(grid::Grid, source::String)
     settings = Dict{Symbol, Any}(
+        :sbase_kva => 1e5,
         :vm_lb => 0.92,
         :vm_ub => 1.05,
         :tm_step => 0.00625
@@ -46,16 +47,11 @@ function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs..
     grid.source = source
     grid.settings = settings
 
-    grid.graph = Graph()
-
-    # if endswith(source, ".dss")
-    #     grid.eng_powermodel, grid.mat_powermodel = _import_from_opendss(source; settings...)
-    # elseif endswith(source, ".json")
-    #     grid.eng_powermodel, grid.mat_powermodel = _import_from_json(source)
-    # else
-    #     @error "Format not recognized for source."
-    #     error("Format not recognized for source.")
-    # end
+    if endswith(source, ".dss")
+        grid.eng_powermodel, grid.mat_powermodel = _import_from_opendss(source; settings...)
+    else
+        throw(InvalidSource("Only OpenDSS files are valid sources"))
+    end
 
     # try
     #     grid.graph = _graph(grid.mat_powermodel)
@@ -79,6 +75,8 @@ function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs..
     # grid.get_substation = () -> _get_substation(grid.mat_powermodel)
     return grid
 end
+
+include("import.jl")
 
 function __init__()
     nx[] = pyimport("networkx")
