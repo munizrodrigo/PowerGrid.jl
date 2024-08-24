@@ -1,6 +1,47 @@
 const nx = Ref{Py}()
+const plotly = Ref{Py}()
+const np = Ref{Py}()
 const walkerlayout = Ref{Py}()
 
 Graph(; kwargs...) = nx[].Graph(; kwargs...)
-
+find_cycle(graph, source) = nx[].find_cycle(graph, source=source)
+is_connected(args...; kwargs...) = nx[].is_connected(args...; kwargs...)
+bfs_tree(graph, source) = nx[].bfs_tree(graph, source=source)
+set_edge_attributes(graph, attrs) = nx[].set_edge_attributes(graph, attrs)
+set_node_attributes(graph, attrs) = nx[].set_node_attributes(graph, attrs)
+set_node_attributes(graph, attrs, name) = nx[].set_node_attributes(graph, attrs, name)
+kamada_kawai_layout(graph) = nx[].kamada_kawai_layout(graph)
+circular_layout(args...; kwargs...) = nx[].circular_layout(args...; kwargs...)
 walker_layout(args...; kwargs...) = walkerlayout[].WalkerLayouting.layout_networkx(args...; kwargs...)
+
+Scatter(args...; kwargs...) = plotly[].Scatter(args...; kwargs...)
+Figure(args...; kwargs...) = plotly[].Figure(args...; kwargs...)
+Layout(args...; kwargs...) = plotly[].Layout(args...; kwargs...)
+
+matrix(args...; kwargs...) = np[].matrix(args...; kwargs...)
+array(args...; kwargs...) = np[].array(args...; kwargs...)
+array2string(args...; kwargs...) = np[].array2string(args...; kwargs...)
+
+function _convert_to_py(data)
+    if isa(data, Vector{Tuple{Any, Any, Real}})
+        return pylist([_convert_to_py(item) for item in data])     
+    elseif isa(data, Matrix)
+        return matrix(pylist([row for row in eachrow(data)]))
+    elseif isa(data, Vector)
+        return pylist(data)
+    elseif isa(data, String)
+        return pystr(data)
+    elseif isa(data, Tuple)
+        return pytuple(data)
+    elseif isa(data, Dict)
+        return pydict(Dict(key => _convert_to_py(value) for (key, value) in data))
+    elseif isa(data, PowerModelsDistribution.ConnConfig) || isa(data, PowerModelsDistribution.LoadModel)
+        return pystr(data)
+    elseif isa(data, Int64)
+        return pyint(data)
+    elseif isa(data, Float64)
+        return pyfloat(data)
+    else
+        return Py(data)
+    end
+end

@@ -46,15 +46,17 @@ function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs..
         throw(InvalidSource("Only OpenDSS files are valid sources"))
     end
 
-    # try
-    #     grid.graph = _graph(grid.mat_powermodel)
-    # catch e
-    #     if isa(e, AssertionError)
-    #         @error "Graph is not radial or not connected!"
-    #         _generate_grid_log(grid.mat_powermodel, dirname(grid.source))
-    #         rethrow()
-    #     end
-    # end
+    try
+        grid.graph = _graph(grid.mat_powermodel)
+    catch e
+        if isa(e, GraphNotRadial)
+            @error("Graph is not radial")
+        elseif isa(e, GraphNotConnected)
+            @error("Graph is not connected")
+        end
+        # _generate_grid_log(grid.mat_powermodel, dirname(grid.source))
+        rethrow()
+    end
     # _update_mat_powermodel!(grid.mat_powermodel, grid.graph)
     # grid.buses = _buses(grid.graph)
     # grid.branches = _branches(grid.graph)
@@ -70,9 +72,12 @@ function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs..
 end
 
 include("import.jl")
+include("graph.jl")
 
 function __init__()
     nx[] = pyimport("networkx")
+    plotly[] = pyimport("plotly.graph_objects")
+    np[] = pyimport("numpy")
     walkerlayout[] = pyimport("walkerlayout")
 end
 
