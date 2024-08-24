@@ -10,13 +10,7 @@ export Grid
 
 include("exceptions.jl")
 include("defaults.jl")
-
-const nx = Ref{Py}()
-const walkerlayout = Ref{Py}()
-
-Graph(; kwargs...) = nx[].Graph(; kwargs...)
-
-walker_layout(args...; kwargs...) = walkerlayout[].WalkerLayouting.layout_networkx(args...; kwargs...)
+include("python.jl")
 
 mutable struct Grid
     source::String
@@ -42,7 +36,7 @@ end
 
 function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs...)
     fill_settings!(settings)
-    
+
     grid.source = source
     grid.settings = settings
 
