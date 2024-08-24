@@ -1,5 +1,7 @@
 [deps]
 networkx = ""
+plotly = ""
+numpy = ""
 
 [pip.deps]
 walkerlayout = ""
