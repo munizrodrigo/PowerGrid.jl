@@ -5,7 +5,7 @@ const default_settings = Dict{Symbol, Any}(
     :tm_step => 0.00625
 )
 
-function fill_settings!(settings::Dict{Symbol, Any})
+function _fill_settings!(settings::Dict{Symbol, Any})
     for (key, value) in default_settings
         if !haskey(settings, key)
             settings[key] = value

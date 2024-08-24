@@ -30,12 +30,12 @@ end
 
 function _grid(grid::Grid, source::String)
     settings = Dict{Symbol, Any}()
-    fill_settings!(settings)
+    _fill_settings!(settings)
     return _grid(grid, source, settings)
 end
 
 function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs...)
-    fill_settings!(settings)
+    _fill_settings!(settings)
 
     grid.source = source
     grid.settings = settings
