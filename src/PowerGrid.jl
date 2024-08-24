@@ -9,6 +9,7 @@ import OrderedCollections: OrderedSet
 export Grid
 
 include("exceptions.jl")
+include("defaults.jl")
 
 const nx = Ref{Py}()
 const walkerlayout = Ref{Py}()
@@ -34,16 +35,14 @@ mutable struct Grid
 end
 
 function _grid(grid::Grid, source::String)
-    settings = Dict{Symbol, Any}(
-        :sbase_kva => 1e5,
-        :vm_lb => 0.92,
-        :vm_ub => 1.05,
-        :tm_step => 0.00625
-    )
+    settings = Dict{Symbol, Any}()
+    fill_settings!(settings)
     return _grid(grid, source, settings)
 end
 
 function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs...)
+    fill_settings!(settings)
+    
     grid.source = source
     grid.settings = settings
 

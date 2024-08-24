@@ -4,17 +4,7 @@ function _import_from_opendss(dss_file::String; settings...)
     (; sbase_kva, vm_lb, vm_ub) = (; settings...)
 
     @info("Using sbase_kva=$(sbase_kva) (basemva=$(sbase_kva / 1e3)) instead of default value.")
-    eng_powermodel["settings"]["sbase_default"] = sbase_kva 
-    
-    # if haskey(kwargs, :pd_increment_fix) || haskey(kwargs, :pd_increment_random)
-    #     _increment_loads!(eng_powermodel; kwargs...)
-    # end
-
-    # if haskey(kwargs, :pg_increment_fix) || haskey(kwargs, :pg_increment_random)
-    #     if haskey(eng_powermodel, "generator")
-    #         _increment_gen!(eng_powermodel; kwargs...)
-    #     end
-    # end
+    eng_powermodel["settings"]["sbase_default"] = sbase_kva
 
     PowerModelsDistribution.apply_voltage_bounds!(eng_powermodel; vm_lb=vm_lb, vm_ub=vm_ub)
 
