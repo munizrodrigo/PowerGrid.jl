@@ -36,7 +36,12 @@ const branch_line = Dict(
     "color" => "black",
 )
 
-const margin = Dict("b" => 20,"l" => 5,"r" => 5,"t" => 40)
+const margin = Dict(
+    "b" => 20,
+    "l" => 5,
+    "r" => 5,
+    "t" => 40
+)
 
 const config = Dict(
     "displaylogo" => false,
@@ -49,10 +54,6 @@ const config = Dict(
         "scale" => 1
     )
 )
-
-function _plot_graph_with_args(args...; kwargs...)
-    return _plot_graph(args...; kwargs...)
-end
 
 function _plot_graph(graph, filepath; bus_attrs=default_bus_attrs, branch_attrs=default_branch_attrs, transformer_attrs=default_transformer_attrs, 
     load_attrs=default_load_attrs, gen_attrs=default_gen_attrs, shunt_attrs=default_shunt_attrs, storage_attrs=default_storage_attrs, fig_size=nothing)
@@ -138,7 +139,7 @@ function _plot_graph(graph, filepath; bus_attrs=default_bus_attrs, branch_attrs=
 
     data.append(node_trace)
 
-    add_node_elements!(data, graph; load_attrs=load_attrs, gen_attrs=gen_attrs, shunt_attrs=shunt_attrs, storage_attrs=storage_attrs)
+    _add_node_elements!(data, graph; load_attrs=load_attrs, gen_attrs=gen_attrs, shunt_attrs=shunt_attrs, storage_attrs=storage_attrs)
 
     annotations = PyList(
         [
@@ -193,7 +194,7 @@ function _plot_graph(graph, filepath; bus_attrs=default_bus_attrs, branch_attrs=
     fig.write_html(filepath, config=PyDict(fig_config))
 end
 
-function add_node_elements!(data, graph; scale=0.05, load_attrs=default_load_attrs, gen_attrs=default_gen_attrs, shunt_attrs=default_shunt_attrs, storage_attrs=default_storage_attrs)
+function _add_node_elements!(data, graph; scale=0.05, load_attrs=default_load_attrs, gen_attrs=default_gen_attrs, shunt_attrs=default_shunt_attrs, storage_attrs=default_storage_attrs)
     for node in graph.nodes()
         x0, y0 = graph.nodes[node]["pos"]
 
