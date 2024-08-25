@@ -57,9 +57,9 @@ function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs..
         # _generate_grid_log(grid.mat_powermodel, dirname(grid.source))
         rethrow()
     end
-    # _update_mat_powermodel!(grid.mat_powermodel, grid.graph)
-    # grid.buses = _buses(grid.graph)
-    # grid.branches = _branches(grid.graph)
+    _update_mat_powermodel!(grid.mat_powermodel, grid.graph)
+    grid.buses = _buses(grid.graph)
+    grid.branches = _branches(grid.graph)
 
     # grid.export_to_json = json_file -> _export_to_json(grid.eng_powermodel, json_file)
     # grid.save_powermodels = path -> _save_powermodels(grid.eng_powermodel, grid.mat_powermodel, path)

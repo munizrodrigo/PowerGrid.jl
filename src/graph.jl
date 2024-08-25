@@ -117,3 +117,35 @@ end
 function _is_connected(graph)
     return Bool(is_connected(graph))
 end
+
+function _update_mat_powermodel!(mat_powermodel, graph)
+    for (index, branch) in mat_powermodel["branch"]
+        (i,j) = (branch["f_bus"], branch["t_bus"])
+        if !((i,j) in graph.edges())
+            @assert (j,i) in graph.edges()
+            mat_powermodel["branch"][index]["f_bus"] = j
+            mat_powermodel["branch"][index]["t_bus"] = i
+            @debug "Branch ($i,$j) not in model. Reverted to ($j,$i)."
+        end
+    end
+
+    for (index, transformer) in mat_powermodel["transformer"]
+        (i,j) = (transformer["f_bus"], transformer["t_bus"])
+        if !((i,j) in graph.edges())
+            @assert (j,i) in graph.edges()
+            mat_powermodel["transformer"][index]["f_bus"] = j
+            mat_powermodel["transformer"][index]["t_bus"] = i
+            @debug "Transformer ($i,$j) not in model. Reverted to ($j,$i)."
+        end
+    end
+end
+
+function _buses(graph)
+    buses = OrderedSet(map(i -> pyconvert(Int64, i), graph.nodes()))
+    return buses
+end
+
+function _branches(graph)
+    branches = OrderedSet(map(ij -> pyconvert(Tuple{Int64, Int64}, ij), graph.edges()))
+    return branches
+end
