@@ -1,15 +1,28 @@
 function _import_from_opendss(dss_file::String; settings...)
-    eng_powermodel = PowerModelsDistribution.parse_file(dss_file; make_pu=false, import_all=true)
+    eng_powermodel = _generate_eng_powermodel(dss_file; settings...)
 
+    mat_powermodel = _generate_mat_powermodel(eng_powermodel; settings...)
+
+    return eng_powermodel, mat_powermodel
+end
+
+function _generate_eng_powermodel(dss_file::String; settings...)
     (; sbase_kva, vm_lb, vm_ub) = (; settings...)
 
+    eng_powermodel = PowerModelsDistribution.parse_file(dss_file; make_pu=false, import_all=true)
+
     @info("Using sbase_kva=$(sbase_kva) (basemva=$(sbase_kva / 1e3)) instead of default value.")
+
     eng_powermodel["settings"]["sbase_default"] = sbase_kva
 
     PowerModelsDistribution.apply_voltage_bounds!(eng_powermodel; vm_lb=vm_lb, vm_ub=vm_ub)
 
     _make_sources_lossless!(eng_powermodel)
 
+    return eng_powermodel
+end
+
+function _generate_mat_powermodel(eng_powermodel; settings...)
     regulators = _get_regulators(eng_powermodel)
     transformer_losses = _recover_transformer_losses(eng_powermodel)
     eng_powermodel_lossless = _make_transformer_lossless(eng_powermodel)
@@ -18,7 +31,7 @@ function _import_from_opendss(dss_file::String; settings...)
     _add_transformer_settings!(mat_powermodel; settings...)
     _unfix_regulators!(mat_powermodel, regulators)
 
-    return eng_powermodel, mat_powermodel
+    return mat_powermodel
 end
 
 function _make_sources_lossless!(eng_powermodel)
@@ -118,7 +131,7 @@ function _add_transformer_losses!(mat_powermodel, transformer_losses)
 end
 
 function _add_transformer_settings!(mat_powermodel; settings...)
-    tm_step = get(settings, :tm_step, nothing)
+    (; tm_step) = (; settings...)
     if !isnothing(tm_step)
         for (index, _) in mat_powermodel["transformer"]
             for phase in eachindex(mat_powermodel["transformer"]["$(index)"]["tm_step"])
