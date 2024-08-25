@@ -65,7 +65,7 @@ function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs..
     grid.save_powermodels = path -> _save_powermodels(grid.eng_powermodel, grid.mat_powermodel, path)
     grid.export_to_opendss = dss_file -> _export_to_opendss(grid.eng_powermodel, dss_file)
 
-    # grid.plot_graph = (args...; kwargs...) -> _plot_graph_with_args(grid.graph, args...; kwargs...)
+    grid.plot_graph = (args...; kwargs...) -> _plot_graph_with_args(grid.graph, args...; kwargs...)
 
     return grid
 end
@@ -73,6 +73,7 @@ end
 include("import.jl")
 include("graph.jl")
 include("export.jl")
+include("plot.jl")
 
 function __init__()
     nx[] = pyimport("networkx")
