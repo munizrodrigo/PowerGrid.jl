@@ -60,19 +60,19 @@ function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs..
     _update_mat_powermodel!(grid.mat_powermodel, grid.graph)
     grid.buses = _buses(grid.graph)
     grid.branches = _branches(grid.graph)
+    grid.get_substation = () -> _get_substation(grid.mat_powermodel)
 
-    # grid.export_to_json = json_file -> _export_to_json(grid.eng_powermodel, json_file)
-    # grid.save_powermodels = path -> _save_powermodels(grid.eng_powermodel, grid.mat_powermodel, path)
-    # grid.export_powerplot = filepath -> _export_powerplot(grid.mat_powermodel, filepath)
+    grid.save_powermodels = path -> _save_powermodels(grid.eng_powermodel, grid.mat_powermodel, path)
+    grid.export_to_opendss = dss_file -> _export_to_opendss(grid.eng_powermodel, dss_file)
+
     # grid.plot_graph = (args...; kwargs...) -> _plot_graph_with_args(grid.graph, args...; kwargs...)
 
-    # grid.export_to_opendss = dss_file -> _export_to_opendss(grid.eng_powermodel, dss_file)
-    # grid.get_substation = () -> _get_substation(grid.mat_powermodel)
     return grid
 end
 
 include("import.jl")
 include("graph.jl")
+include("export.jl")
 
 function __init__()
     nx[] = pyimport("networkx")
