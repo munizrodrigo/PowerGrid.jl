@@ -11,6 +11,7 @@ PowerModelsDistribution = "d7431456-977f-11e9-2de3-97ff7677985e"
 PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 
 [compat]
+PowerModelsDistribution = "0.15"
 PythonCall = "0.9"
 OrderedCollections = "1"
 PowerModels = "0.21"
