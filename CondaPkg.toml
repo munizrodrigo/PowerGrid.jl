@@ -2,6 +2,7 @@
 networkx = ""
 plotly = ""
 numpy = ""
+scipy = ""
 
 [pip.deps]
 walkerlayout = ""
