@@ -49,12 +49,16 @@ function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs..
     try
         grid.graph = _graph(grid.mat_powermodel)
     catch e
-        if isa(e, GraphNotRadial)
-            @error("Graph is not radial")
-        elseif isa(e, GraphNotConnected)
-            @error("Graph is not connected")
+        if isa(e, Union{GraphNotRadial,GraphNotConnected})
+            use_walkerlayout = true
+            if isa(e, GraphNotRadial)
+                @error("Graph is not radial")
+            else
+                @error("Graph is not connected")
+                use_walkerlayout = false
+            end
+            _generate_grid_log(grid.mat_powermodel, dirname(grid.source); use_walkerlayout=use_walkerlayout)
         end
-        # _generate_grid_log(grid.mat_powermodel, dirname(grid.source))
         rethrow()
     end
     _update_mat_powermodel!(grid.mat_powermodel, grid.graph)
@@ -74,6 +78,7 @@ include("import.jl")
 include("graph.jl")
 include("export.jl")
 include("plot.jl")
+include("log.jl")
 
 function __init__()
     nx[] = pyimport("networkx")
