@@ -19,6 +19,14 @@ function _generate_eng_powermodel(dss_file::String; settings...)
 
     _make_sources_lossless!(eng_powermodel)
 
+    dss_ext_file = first(splitext(dss_file)) * ".dsse"
+
+    if isfile(dss_ext_file)
+        _add_dss_extensions!(eng_powermodel, dss_ext_file)
+    else
+        @info("No OpenDSS extension .dsse file was found. Using only the main .dss file.")
+    end
+
     return eng_powermodel
 end
 
@@ -49,6 +57,72 @@ function _make_sources_lossless!(eng_powermodel)
         source["dss"]["z0"] = "0,0"
         source["dss"]["z1"] = "0,0"
     end
+end
+
+function _add_dss_extensions!(eng_powermodel, dss_ext_file)
+    dss_ext = _import_dss_extensions(dss_ext_file)
+    if haskey(dss_ext, "generator")
+        _add_gen_extensions!(eng_powermodel, dss_ext)
+    end
+    if haskey(dss_ext, "load")
+        _add_load_extensions!(eng_powermodel, dss_ext)
+    end
+end
+
+function _import_dss_extensions(dss_ext_file)
+    cmds = _parse_dss_entensions_cmds(dss_ext_file)
+    dss_ext = Dict{String, Dict}()
+    for cmd in cmds
+        element_and_attrs = [strip(c) for c in split(cmd, " ")]
+        element = first(element_and_attrs)
+        attrs = element_and_attrs[2:end]
+        class, name = split(element, ".")
+        if !haskey(dss_ext, class)
+            dss_ext[class] = Dict{String, Dict}()
+        end
+        dss_ext[class][name] = Dict{String, String}()
+        for attr in attrs
+            attr_name, attr_value = split(attr, "=")
+            dss_ext[class][name][attr_name] = attr_value
+        end
+    end
+    return dss_ext
+end
+
+function _parse_dss_entensions_cmds(dss_ext_file)
+    local dss_ext_cmds
+    open(dss_ext_file) do file
+        dss_ext_cmds = readlines(file)
+    end
+    dss_ext_valid_cmds = Vector{String}()
+    for cmd in dss_ext_cmds
+        if startswith(cmd, "edit")
+            push!(dss_ext_valid_cmds, strip(cmd[length("edit")+1:end]))
+        end
+    end
+    return dss_ext_valid_cmds
+end
+
+function _add_gen_extensions!(eng_powermodel, dss_ext)
+    attr_map = Dict{String, String}(
+        "minkw" => "pg_lb",
+        "maxkw" => "pg_ub",
+        "minkvar" => "qg_lb",
+        "maxkvar" => "qg_ub"
+    )
+    for (gen_name, gen_attrs) in dss_ext["generator"]
+        @assert haskey(eng_powermodel["generator"], gen_name)
+        for (attr_name, attr_value) in gen_attrs
+            @assert haskey(attr_map, attr_name)
+            for phase in eachindex(eng_powermodel["generator"][gen_name][attr_map[attr_name]])
+                eng_powermodel["generator"][gen_name][attr_map[attr_name]][phase] = parse(Float64, attr_value) / eng_powermodel["generator"][gen_name]["phases"]
+            end
+        end
+    end
+end
+
+function _add_load_extensions!(eng_powermodel, dss_ext)
+    #TODO Implement load extensions
 end
 
 function _get_regulators(eng_powermodel)
