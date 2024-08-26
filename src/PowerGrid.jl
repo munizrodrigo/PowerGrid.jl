@@ -7,6 +7,7 @@ import PowerModelsDistribution
 import OrderedCollections: OrderedSet
 
 export Grid
+export edit_load!, edit_gen!
 
 include("exceptions.jl")
 include("defaults.jl")
@@ -79,6 +80,7 @@ include("graph.jl")
 include("export.jl")
 include("plot.jl")
 include("log.jl")
+include("edit.jl")
 
 function __init__()
     nx[] = pyimport("networkx")

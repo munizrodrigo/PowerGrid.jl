@@ -192,6 +192,8 @@ function _plot_graph(graph, filepath; bus_attrs=default_bus_attrs, branch_attrs=
     fig_config["toImageButtonOptions"] = PyDict(fig_config["toImageButtonOptions"])
 
     fig.write_html(filepath, config=PyDict(fig_config))
+
+    return nothing
 end
 
 function _add_node_elements!(data, graph; scale=0.05, load_attrs=default_load_attrs, gen_attrs=default_gen_attrs, shunt_attrs=default_shunt_attrs, storage_attrs=default_storage_attrs)
