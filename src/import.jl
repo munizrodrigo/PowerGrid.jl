@@ -21,11 +21,7 @@ function _generate_eng_powermodel(dss_file::String; settings...)
 
     dss_ext_file = first(splitext(dss_file)) * ".dsse"
 
-    if isfile(dss_ext_file)
-        _add_dss_extensions!(eng_powermodel, dss_ext_file)
-    else
-        @info("No OpenDSS extension .dsse file was found. Using only the main .dss file.")
-    end
+    _add_dss_extensions!(eng_powermodel, dss_ext_file)
 
     return eng_powermodel
 end
@@ -68,11 +64,19 @@ function _add_dss_extensions!(eng_powermodel, dss_ext_file)
     end
     if haskey(dss_ext, "load")
         _add_load_extensions!(eng_powermodel, dss_ext)
+    else
+        _fill_load_extensions_with_default!(eng_powermodel)
     end
 end
 
 function _import_dss_extensions(dss_ext_file)
-    cmds = _parse_dss_entensions_cmds(dss_ext_file)
+    if isfile(dss_ext_file)
+        @info("An OpenDSS extension .dsse file was found. Using this file to extend the grid parameters.")
+        cmds = _parse_dss_entensions_cmds(dss_ext_file)
+    else
+        @info("No OpenDSS extension .dsse file was found. Using only the main .dss file.")
+        cmds = Vector{String}()
+    end
     dss_ext = Dict{String, Dict}()
     for cmd in cmds
         element_and_attrs = [strip(c) for c in split(cmd, " ")]
