@@ -39,6 +39,8 @@ function _generate_mat_powermodel(eng_powermodel; settings...)
     _add_transformer_settings!(mat_powermodel; settings...)
     _unfix_regulators!(mat_powermodel, regulators)
 
+    _transform_data_model_extensions!(mat_powermodel, eng_powermodel)
+
     return mat_powermodel
 end
 
@@ -103,13 +105,15 @@ function _parse_dss_entensions_cmds(dss_ext_file)
     return dss_ext_valid_cmds
 end
 
+const gen_attr_map = Dict{String, String}(
+    "minkw" => "pg_lb",
+    "maxkw" => "pg_ub",
+    "minkvar" => "qg_lb",
+    "maxkvar" => "qg_ub"
+)
+
 function _add_gen_extensions!(eng_powermodel, dss_ext)
-    attr_map = Dict{String, String}(
-        "minkw" => "pg_lb",
-        "maxkw" => "pg_ub",
-        "minkvar" => "qg_lb",
-        "maxkvar" => "qg_ub"
-    )
+    attr_map = gen_attr_map
     for (gen_name, gen_attrs) in dss_ext["generator"]
         @assert haskey(eng_powermodel["generator"], gen_name)
         for (attr_name, attr_value) in gen_attrs
@@ -121,8 +125,67 @@ function _add_gen_extensions!(eng_powermodel, dss_ext)
     end
 end
 
+const load_attr_map = Dict{String, String}(
+    "minkw" => "pd_lb",
+    "maxkw" => "pd_ub",
+    "minkvar" => "qd_lb",
+    "maxkvar" => "qd_ub"
+)
+
 function _add_load_extensions!(eng_powermodel, dss_ext)
-    #TODO Implement load extensions
+    attr_map = load_attr_map
+    for (load_name, load_attrs) in dss_ext["load"]
+        @assert haskey(eng_powermodel["load"], load_name)
+        for (attr_name, attr_value) in load_attrs
+            @assert haskey(attr_map, attr_name)
+            eng_powermodel["load"][load_name][attr_map[attr_name]] = deepcopy(eng_powermodel["load"][load_name]["pd_nom"])
+            for phase in eachindex(eng_powermodel["load"][load_name][attr_map[attr_name]])
+                eng_powermodel["load"][load_name][attr_map[attr_name]][phase] = parse(Float64, attr_value) / parse(Float64, eng_powermodel["load"][load_name]["dss"]["phases"])
+            end
+        end
+    end
+    _fill_load_extensions_with_default!(eng_powermodel)
+end
+
+const load_extensions_default = Dict{String, String}(
+    "pd_lb" => "pd_nom",
+    "pd_ub" => "pd_nom",
+    "qd_lb" => "qd_nom",
+    "qd_ub" => "qd_nom"
+)
+
+function _fill_load_extensions_with_default!(eng_powermodel)
+    for load_name in keys(eng_powermodel["load"])
+        for (ext_attr_name, default_attr_name) in load_extensions_default
+            if !haskey(eng_powermodel["load"][load_name], ext_attr_name)
+                eng_powermodel["load"][load_name][ext_attr_name] = deepcopy(eng_powermodel["load"][load_name][default_attr_name])
+            end
+        end
+    end
+end
+
+const load_extensions_transform_map = Dict{String, String}(
+    "pd_lb" => "pdmin",
+    "pd_ub" => "pdmax",
+    "qd_lb" => "qdmin",
+    "qd_ub" => "qdmax"
+)
+
+function _transform_data_model_extensions!(mat_powermodel, eng_powermodel)
+    attr_map = load_extensions_transform_map
+    sbase = mat_powermodel["settings"]["sbase"]
+    for (load_index, load_attrs) in mat_powermodel["load"]
+        load_name = load_attrs["name"]
+        @assert haskey(eng_powermodel["load"], load_name)
+        for (eng_attr_name, mat_attr_name) in attr_map
+            if haskey(eng_powermodel["load"][load_name], eng_attr_name)
+                mat_powermodel["load"][load_index][mat_attr_name] = deepcopy(eng_powermodel["load"][load_name][eng_attr_name])
+                for phase in eachindex(mat_powermodel["load"][load_index][mat_attr_name])
+                    mat_powermodel["load"][load_index][mat_attr_name][phase] /= sbase
+                end
+            end
+        end
+    end
 end
 
 function _get_regulators(eng_powermodel)
