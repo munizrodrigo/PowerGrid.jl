@@ -1,4 +1,4 @@
-const default_load_attrs = ["name", "model", "configuration", "pd", "qd", "dispatchable"]
+const default_load_attrs = ["name", "model", "configuration", "pd", "qd", "pdmin", "pdmax", "qdmin", "qdmax", "dispatchable"]
 const default_gen_attrs = ["name", "model", "configuration", "pg", "qg", "pmin", "pmax", "qmin", "qmax"]
 const default_shunt_attrs = ["name", "gs", "bs", "dispatchable"]
 const default_storage_attrs = ["name", "configuration", "energy_rating", "r", "x", "energy", "ps", "qs", "charge_rating", "discharge_rating", "charge_efficiency", "discharge_efficiency", "p_loss", "q_loss", "qmin", "qmax"]
