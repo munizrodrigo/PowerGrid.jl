@@ -315,3 +315,28 @@ function _unfix_regulators!(mat_powermodel, regulators)
     end
     return nothing
 end
+
+function _import_settings(dss_file::String, print_output::Bool)
+    settings_file = first(splitext(dss_file)) * ".json"
+    if isfile(settings_file)
+        if print_output
+            @info("A settings file was found. Using this file to import settings for the grid.")
+        end
+        open(settings_file,"r") do file
+            settings = JSON.parse(file)
+        end
+        settings = Dict{Symbol, Any}(Symbol(k) => v for (k,v) in settings)
+    else
+        settings = Dict{Symbol, Any}()
+    end
+    return settings
+end
+
+function _add_imported_settings!(settings::Dict{Symbol, Any}, dss_file::String; print_output=true)
+    imported_settings = _import_settings(dss_file, print_output)
+    for (key, value) in imported_settings
+        if !haskey(settings, key)
+            settings[key] = value
+        end
+    end
+end

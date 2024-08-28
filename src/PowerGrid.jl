@@ -1,6 +1,7 @@
 module PowerGrid
 
 using PythonCall
+using JSON
 
 import PowerModels
 import PowerModelsDistribution
@@ -31,11 +32,13 @@ end
 
 function _grid(grid::Grid, source::String)
     settings = Dict{Symbol, Any}()
+    _add_imported_settings!(settings, source; print_output=false)
     _fill_settings!(settings)
     return _grid(grid, source, settings)
 end
 
 function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs...)
+    _add_imported_settings!(settings, source; print_output=true)
     _fill_settings!(settings)
 
     grid.source = source
