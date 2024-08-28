@@ -1,7 +1,13 @@
 function _import_from_opendss(dss_file::String; settings...)
+    (; ignore_transformer_losses) = (; settings...)
+
     eng_powermodel = _generate_eng_powermodel(dss_file; settings...)
 
     mat_powermodel = _generate_mat_powermodel(eng_powermodel; settings...)
+
+    if ignore_transformer_losses
+        _make_transformer_lossless!(eng_powermodel)
+    end
 
     return eng_powermodel, mat_powermodel
 end
@@ -27,9 +33,14 @@ function _generate_eng_powermodel(dss_file::String; settings...)
 end
 
 function _generate_mat_powermodel(eng_powermodel; settings...)
+    (; ignore_transformer_losses) = (; settings...)
     regulators = _get_regulators(eng_powermodel)
     transformer_losses = _recover_transformer_losses(eng_powermodel)
-    eng_powermodel_lossless = _make_transformer_lossless(eng_powermodel)
+    if ignore_transformer_losses
+        _set_losses_to_zero!(transformer_losses)
+    end
+    eng_powermodel_lossless = deepcopy(eng_powermodel)
+    _make_transformer_lossless!(eng_powermodel_lossless)
     mat_powermodel = PowerModelsDistribution.transform_data_model(eng_powermodel_lossless)
     _add_transformer_losses!(mat_powermodel, transformer_losses)
     _add_transformer_settings!(mat_powermodel; settings...)
@@ -224,9 +235,8 @@ function _recover_transformer_losses(eng_powermodel)
     return transformer_losses
 end
 
-function _make_transformer_lossless(eng_powermodel)
-    eng_powermodel_lossless = deepcopy(eng_powermodel)
-    for (_, transformer) in eng_powermodel_lossless["transformer"]
+function _make_transformer_lossless!(eng_powermodel)
+    for (_, transformer) in eng_powermodel["transformer"]
         for (i, _) in pairs(transformer["rw"])
             transformer["rw"][i] = 0.0
         end
@@ -241,7 +251,16 @@ function _make_transformer_lossless(eng_powermodel)
         transformer["dss"]["%r"] = "0.0"
         transformer["dss"]["xhl"] = "0"
     end
-    return eng_powermodel_lossless
+end
+
+function _set_losses_to_zero!(transformer_losses)
+    for (transformer_name, transformer_attrs) in transformer_losses
+        for (attr_name, attr_value) in transformer_attrs
+            for phase in eachindex(transformer_losses[transformer_name][attr_name])
+                transformer_losses[transformer_name][attr_name][phase] = 0.0
+            end
+        end
+    end
 end
 
 function _add_transformer_losses!(mat_powermodel, transformer_losses)
