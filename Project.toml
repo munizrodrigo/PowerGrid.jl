@@ -13,6 +13,7 @@ PythonCall = "6099a3de-0909-46bc-b1f4-468b9a2dfc0d"
 
 [compat]
 CondaPkg = "0.2"
+JSON = "0.21"
 OrderedCollections = "1"
 PowerModels = "0.21"
 PowerModelsDistribution = "0.15"
