@@ -327,7 +327,7 @@ function _add_shunt_settings!(mat_powermodel; settings...)
             mat_powermodel["shunt"][index]["dss"] = Dict{String,Any}()
         end
         if !haskey(mat_powermodel["shunt"][index]["dss"], "numsteps")
-            mat_powermodel["shunt"][index]["dss"]["numsteps"] = "$(shunt_numsteps)"
+            mat_powermodel["shunt"][index]["dss"]["numsteps"] = shunt_numsteps
         end
     end
     return nothing
