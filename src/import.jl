@@ -29,6 +29,8 @@ function _generate_eng_powermodel(dss_file::String; settings...)
 
     _add_dss_extensions!(eng_powermodel, dss_ext_file)
 
+    # TODO Add shunt and transformer settings for eng_powermodel
+
     return eng_powermodel
 end
 
@@ -47,6 +49,8 @@ function _generate_mat_powermodel(eng_powermodel; settings...)
     _unfix_regulators!(mat_powermodel, regulators)
 
     _transform_data_model_extensions!(mat_powermodel, eng_powermodel)
+
+    _add_shunt_settings!(mat_powermodel; settings...)
 
     return mat_powermodel
 end
@@ -311,6 +315,19 @@ function _unfix_regulators!(mat_powermodel, regulators)
                 end
                 break
             end
+        end
+    end
+    return nothing
+end
+
+function _add_shunt_settings!(mat_powermodel; settings...)
+    (; shunt_numsteps) = (; settings...)
+    for (index, _) in mat_powermodel["shunt"]
+        if !haskey(mat_powermodel["shunt"][index], "dss")
+            mat_powermodel["shunt"][index]["dss"] = Dict{String,Any}()
+        end
+        if !haskey(mat_powermodel["shunt"][index]["dss"], "numsteps")
+            mat_powermodel["shunt"][index]["dss"]["numsteps"] = "$(shunt_numsteps)"
         end
     end
     return nothing
