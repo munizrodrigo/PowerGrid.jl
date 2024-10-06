@@ -78,6 +78,10 @@ function _grid(grid::Grid, source::String, settings::Dict{Symbol, Any}; kwargs..
     return grid
 end
 
+function Base.show(io::IO, g::Grid)
+    print(io, "Grid with $(length(keys(g.mat_powermodel["bus"]))) buses, $(length(keys(g.mat_powermodel["branch"])) + length(keys(g.mat_powermodel["transformer"]))) branches, $(length(keys(g.mat_powermodel["load"]))) loads, $(length(keys(g.mat_powermodel["gen"]))) generators and $(length(keys(g.mat_powermodel["shunt"]))) shunt capacitors")
+end
+
 include("import.jl")
 include("graph.jl")
 include("export.jl")

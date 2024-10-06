@@ -1,7 +1,7 @@
 name = "PowerGrid"
 uuid = "41ccd83a-347b-449b-936f-192b657ea7d1"
 authors = ["João Rodrigo da Silva Muniz"]
-version = "1.0.3-DEV"
+version = "1.0.4-DEV"
 
 [deps]
 CondaPkg = "992eb4ea-22a4-4c89-a5bb-47a3300528ab"
@@ -16,7 +16,7 @@ CondaPkg = "0.2"
 JSON = "0.21"
 OrderedCollections = "1"
 PowerModels = "0.21"
-PowerModelsDistribution = "0.15"
+PowerModelsDistribution = "0.15, 0.16"
 PythonCall = "0.9"
 julia = "1.6.7"
 
