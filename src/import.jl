@@ -128,7 +128,9 @@ const gen_attr_map = Dict{String, String}(
     "minkw" => "pg_lb",
     "maxkw" => "pg_ub",
     "minkvar" => "qg_lb",
-    "maxkvar" => "qg_ub"
+    "maxkvar" => "qg_ub",
+    "%mean" => "%mean",
+    "%stddev" => "%stddev"
 )
 
 function _add_gen_extensions!(eng_powermodel, dss_ext)
@@ -137,8 +139,12 @@ function _add_gen_extensions!(eng_powermodel, dss_ext)
         @assert haskey(eng_powermodel["generator"], gen_name)
         for (attr_name, attr_value) in gen_attrs
             @assert haskey(attr_map, attr_name)
-            for phase in eachindex(eng_powermodel["generator"][gen_name][attr_map[attr_name]])
-                eng_powermodel["generator"][gen_name][attr_map[attr_name]][phase] = parse(Float64, attr_value) / eng_powermodel["generator"][gen_name]["phases"]
+            if haskey(eng_powermodel["generator"][gen_name], attr_map[attr_name])
+                for phase in eachindex(eng_powermodel["generator"][gen_name][attr_map[attr_name]])
+                    eng_powermodel["generator"][gen_name][attr_map[attr_name]][phase] = parse(Float64, attr_value) / eng_powermodel["generator"][gen_name]["phases"]
+                end
+            else
+                eng_powermodel["generator"][gen_name][attr_map[attr_name]] = parse(Float64, attr_value)
             end
         end
     end
@@ -190,6 +196,16 @@ const load_extensions_transform_map = Dict{String, String}(
     "qd_ub" => "qdmax"
 )
 
+const gen_extensions_transform_map = Dict{String, String}(
+    "%mean" => "mean",
+    "%stddev" => "stddev"
+)
+
+const gen_extensions_default = Dict{String, Any}(
+    "mean" => 1.0,
+    "stddev" => 0.0
+)
+
 function _transform_data_model_extensions!(mat_powermodel, eng_powermodel)
     attr_map = load_extensions_transform_map
     sbase = mat_powermodel["settings"]["sbase"]
@@ -204,6 +220,30 @@ function _transform_data_model_extensions!(mat_powermodel, eng_powermodel)
                 end
             end
         end
+    end
+    attr_map = gen_extensions_transform_map
+    for (gen_index, gen_attrs) in mat_powermodel["gen"]
+        gen_name = gen_attrs["name"]
+        if !(occursin("_virtual_gen", gen_name) && gen_attrs["gen_bus"] == _get_substation(mat_powermodel))
+            @assert haskey(eng_powermodel["generator"], gen_name)
+            for (eng_attr_name, mat_attr_name) in attr_map
+                if haskey(eng_powermodel["generator"][gen_name], eng_attr_name)
+                    mat_powermodel["gen"][gen_index][mat_attr_name] = deepcopy(eng_powermodel["generator"][gen_name][eng_attr_name])
+                    if occursin("%", eng_attr_name) && !occursin("%", mat_attr_name)
+                        mat_powermodel["gen"][gen_index][mat_attr_name] /= 100
+                    end
+                else
+                    mat_powermodel["gen"][gen_index][mat_attr_name] = gen_extensions_default[mat_attr_name]
+                end
+            end
+        else
+            for (_, mat_attr_name) in attr_map
+                mat_powermodel["gen"][gen_index][mat_attr_name] = gen_extensions_default[mat_attr_name]
+            end
+        end
+    end
+    if haskey(eng_powermodel, "time_series")
+        mat_powermodel["time_series"] = deepcopy(eng_powermodel["time_series"])
     end
 end
 
